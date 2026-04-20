@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card" style="max-width:650px; margin:3rem auto; padding:2rem;">
+    <h1>📊 Class Summary Report</h1>
+    <hr>
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem; margin:1.5rem 0;">
+        <div class="card" style="text-align:center; background:#f0fff4; border:1px solid #28a745;">
+            <div style="font-size:2rem; font-weight:bold; color:#28a745;">{{ avg_score }}%</div>
+            <div style="color:#666; font-size:0.9rem;">Avg Engagement</div>
+        </div>
+        <div class="card" style="text-align:center; background:#f0f4ff; border:1px solid #007bff;">
+            <div style="font-size:2rem; font-weight:bold; color:#007bff;">{{ duration }}</div>
+            <div style="color:#666; font-size:0.9rem;">Duration</div>
+        </div>
+        <div class="card" style="text-align:center; background:#fff5f5; border:1px solid #dc3545;">
+            <div style="font-size:2rem; font-weight:bold; color:#dc3545;">{{ alerts }}</div>
+            <div style="color:#666; font-size:0.9rem;">Alerts</div>
+        </div>
+    </div>
+
+    <h3>⚠️ Low Engagement Moments</h3>
+    {% if highlights %}
+    <table style="width:100%; border-collapse:collapse;">
+        <tr style="background:#f8f9fa;">
+            <th style="padding:8px; text-align:left; border:1px solid #ddd;">Time</th>
+            <th style="padding:8px; text-align:left; border:1px solid #ddd;">Class Vibe</th>
+        </tr>
+        {% for h in highlights %}
+        <tr>
+            <td style="padding:8px; border:1px solid #ddd;">{{ h.time }}</td>
+            <td style="padding:8px; border:1px solid #ddd; color:orange; font-weight:bold;">{{ h.vibe }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+    <p style="color:#28a745;">🎉 No significant low-engagement moments. Great class!</p>
+    {% endif %}
+
+    <br>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <a href="/teacher" class="btn" style="flex:1; text-align:center; padding:10px; text-decoration:none;">← Dashboard</a>
+        {% if session_id %}
+        <a href="/session/{{ session_id }}" class="btn-blue" style="flex:1; text-align:center; padding:10px; border-radius:6px; text-decoration:none;">📊 Full Session Report</a>
+        {% endif %}
+        <a href="/sessions" class="btn-blue" style="flex:1; text-align:center; padding:10px; border-radius:6px; text-decoration:none;">📁 All Sessions</a>
+    </div>
+</div>
+{% endblock %}

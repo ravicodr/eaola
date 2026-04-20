@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>EAOLA - Emotion Aware Online Learning Assistant</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* ── Reset ──────────────────────────────────────────────── */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: #f0f2f5;
+            color: #1a1a2e;
+        }
+
+        /* ── Navbar ─────────────────────────────────────────────── */
+        .nav {
+            background: #ffffff;
+            border-bottom: 1px solid #e8ecf0;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav > div:first-child {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #1565c0;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav > div:first-child::before {
+            content: '🎓';
+            font-size: 1.4rem;
+        }
+
+        .nav a {
+            color: #1565c0;
+            border: 1.5px solid #1565c0;
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .nav a:hover {
+            background: #1565c0;
+            color: white;
+        }
+
+        .nav span {
+            color: #555;
+            font-size: 0.88rem;
+            font-weight: 500;
+        }
+
+        /* ── Container ───────────────────────────────────────────── */
+        .container {
+            max-width: 1280px;
+            margin: 1.5rem auto;
+            padding: 0 1.2rem;
+        }
+
+        /* ── Grid ────────────────────────────────────────────────── */
+        .grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.2rem;
+        }
+
+        @media (max-width: 900px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        /* ── Cards ───────────────────────────────────────────────── */
+        .card {
+            background: #ffffff;
+            border: 1px solid #e8ecf0;
+            border-radius: 14px;
+            padding: 1.3rem;
+            margin-bottom: 1.2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: box-shadow 0.2s;
+        }
+        .card:hover {
+            box-shadow: 0 4px 18px rgba(0,0,0,0.09);
+        }
+
+        .card h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1a1a2e;
+            margin-bottom: 1rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 2px solid #f0f2f5;
+        }
+
+        /* ── Stats ───────────────────────────────────────────────── */
+        .stat-num {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #1565c0;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #888;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        /* ── Buttons ─────────────────────────────────────────────── */
+        .btn {
+            background: #1565c0;
+            color: white;
+            border: none;
+            padding: 11px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 0.93rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            box-shadow: 0 2px 8px rgba(21,101,192,0.25);
+            transition: background 0.2s, transform 0.15s;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .btn:hover { background: #0d47a1; transform: translateY(-1px); }
+
+        .btn-red {
+            background: #e53935;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 7px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .btn-red:hover { background: #c62828; }
+
+        .btn-blue {
+            background: #1565c0;
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 7px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* ── Toolbar ─────────────────────────────────────────────── */
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 0.8rem;
+        }
+
+        .toolbar a, .toolbar button {
+            padding: 7px 14px;
+            border-radius: 7px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .toolbar a:hover, .toolbar button:hover {
+            filter: brightness(0.9);
+            transform: translateY(-1px);
+        }
+
+        .tb-green  { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .tb-teal   { background: #e0f7fa; color: #00695c; border: 1px solid #b2ebf2; }
+        .tb-purple { background: #ede7f6; color: #4527a0; border: 1px solid #d1c4e9; }
+        .tb-orange { background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
+        .tb-blue   { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
+        .tb-red    { background: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+        .tb-indigo { background: #e8eaf6; color: #283593; border: 1px solid #c5cae9; }
+
+        /* ── Session Badge ───────────────────────────────────────── */
+        .session-badge {
+            display: none;
+            background: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            color: #2e7d32;
+            padding: 7px 14px;
+            border-radius: 8px;
+            font-size: 0.83rem;
+            font-weight: 600;
+        }
+
+        /* ── Hand Badge ──────────────────────────────────────────── */
+        .hand-badge {
+            background: #e53935;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 7px;
+            font-size: 0.72rem;
+            margin-left: 6px;
+            font-weight: 700;
+        }
+
+        /* ── Alert Box ───────────────────────────────────────────── */
+        #alertBox {
+            background: #fff8e1;
+            border: 1.5px solid #ffb300;
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            display: none;
+            margin-bottom: 1rem;
+        }
+
+        /* ── Auto Alert Banner ───────────────────────────────────── */
+        #autoAlertBanner {
+            display: none;
+            background: #ffebee;
+            border: 1.5px solid #ef9a9a;
+            color: #c62828;
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin-bottom: 1.2rem;
+            font-size: 0.93rem;
+            font-weight: 600;
+            text-align: center;
+            animation: alertPulse 1.5s infinite;
+        }
+        @keyframes alertPulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+
+        /* ── Vibe ────────────────────────────────────────────────── */
+        #vibe {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #1565c0;
+            display: block;
+            text-align: center;
+            margin: 8px 0;
+        }
+
+        /* ── Advice Box ──────────────────────────────────────────── */
+        .advice-box {
+            background: #f0f7ff;
+            border: 1px solid #bbdefb;
+            border-left: 4px solid #1565c0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-top: 10px;
+        }
+        .advice-label {
+            font-size: 0.72rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        #ai_advice {
+            font-size: 0.88rem;
+            color: #1a1a2e;
+            font-weight: 500;
+        }
+
+        /* ── Hand Item ───────────────────────────────────────────── */
+        .hand-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 12px;
+            background: #fff8f8;
+            border: 1px solid #ffcdd2;
+            border-left: 4px solid #e53935;
+            border-radius: 8px;
+            margin-bottom: 7px;
+        }
+
+        /* ── Poll Bars ───────────────────────────────────────────── */
+        .poll-bar-wrap {
+            background: #f0f2f5;
+            border-radius: 6px;
+            height: 8px;
+            margin-top: 4px;
+        }
+        .poll-bar-fill {
+            height: 8px;
+            border-radius: 6px;
+            background: linear-gradient(90deg, #1565c0, #42a5f5);
+            transition: width 0.4s;
+        }
+
+        /* ── Poll Overlay ────────────────────────────────────────── */
+        .poll-overlay {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 420px;
+            background: white;
+            border: 1px solid #e8ecf0;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            padding: 1.8rem;
+            z-index: 1000;
+            text-align: center;
+            display: none;
+        }
+        .poll-option {
+            background: #f5f7fa;
+            border: 1.5px solid #e8ecf0;
+            padding: 12px;
+            margin: 8px 0;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.2s;
+            font-weight: 600;
+            color: #1a1a2e;
+            font-size: 0.93rem;
+        }
+        .poll-option:hover {
+            background: #e3f2fd;
+            border-color: #1565c0;
+            color: #1565c0;
+        }
+
+        /* ── Video Feed ──────────────────────────────────────────── */
+        .feed-container {
+            position: relative;
+            width: 100%;
+            min-height: 300px;
+            background: #1a1a2e;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #e8ecf0;
+        }
+        .feed {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+        }
+        .controls {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            padding: 8px 20px;
+            border-radius: 30px;
+            display: flex;
+            gap: 12px;
+        }
+        .icon-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 38px; height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,0.2); }
+        .icon-btn.off { background: #e53935; }
+
+        .audio-status {
+            position: absolute;
+            top: 10px; right: 10px;
+            background: rgba(0,0,0,0.65);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+        }
+
+        .join-audio-btn {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2e7d32;
+            color: white;
+            padding: 14px 28px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            cursor: pointer;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(46,125,50,0.4);
+            transition: 0.2s;
+        }
+        .join-audio-btn:hover {
+            background: #1b5e20;
+            transform: translate(-50%, -50%) scale(1.04);
+        }
+
+        /* ── Heatmap ─────────────────────────────────────────────── */
+        #heatmapGrid table { border-collapse: separate; border-spacing: 2px; }
+        #heatmapGrid th { color: #888; font-size: 0.68rem; padding: 3px 5px; font-weight: 600; }
+        #heatmapGrid td { border-radius: 4px; }
+
+        /* ── Scrollbar ───────────────────────────────────────────── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f0f2f5; }
+        ::-webkit-scrollbar-thumb { background: #c0cdd8; border-radius: 3px; }
+
+        /* ── Form ────────────────────────────────────────────────── */
+        a { color: #1565c0; text-decoration: none; }
+        input, select {
+            width: 90%;
+            padding: 10px 14px;
+            margin: 8px 0;
+            background: white;
+            border: 1.5px solid #d8dee5;
+            border-radius: 8px;
+            color: #1a1a2e;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            font-size: 0.9rem;
+        }
+        input:focus, select:focus { border-color: #1565c0; box-shadow: 0 0 0 3px rgba(21,101,192,0.1); }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <div>EAOLA &nbsp;<span style="font-size:.65rem;color:#999;font-weight:400;letter-spacing:.5px;">Emotion Aware Online Learning Assistant</span></div>
+        {% if session.get('user') %}
+        <div style="display:flex;align-items:center;gap:12px;">
+            <span>👤 {{ session['user'] }}
+                {% if session.get('role') %}
+                <span style="background:#e3f2fd;color:#1565c0;border-radius:6px;padding:2px 8px;font-size:.72rem;font-weight:600;margin-left:4px;">{{ session['role']|capitalize }}</span>
+                {% endif %}
+            </span>
+            <a href="/logout">Logout</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+
+    <script>
+        {% if session.get('user') %}
+        const myPeerId = "user-" + Math.floor(Math.random() * 100000);
+        let peer = null, myStream = null, peersConnected = [];
+
+        function startAudio() {
+            document.getElementById('join-audio-btn').style.display = 'none';
+            navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+            .then(stream => {
+                myStream = stream;
+                peer = new Peer(myPeerId);
+                peer.on('open', () => joinRoom());
+                peer.on('call', call => {
+                    call.answer(myStream);
+                    call.on('stream', a => playAudio(a));
+                });
+                startSpeechRecognition();
+            }).catch(err => alert("Mic Access Denied: " + err.message));
+        }
+
+        function startSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window) {
+                const r = new webkitSpeechRecognition();
+                r.continuous = true; r.interimResults = false;
+                r.onresult = function(e) {
+                    const t = e.results[e.results.length-1][0].transcript;
+                    fetch('/analyze_audio', { method:'POST', headers:{'Content-Type':'application/json'},
+                        body: JSON.stringify({ text: t, user: "{{ session['user'] }}" }) });
+                };
+                r.start();
+            }
+        }
+
+        function joinRoom() {
+            fetch('/join_audio_room', { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ peer_id: myPeerId })
+            }).then(r => r.json()).then(data => data.peers.forEach(id => connectToPeer(id)));
+        }
+
+        function connectToPeer(id) {
+            if (peersConnected.includes(id)) return;
+            const call = peer.call(id, myStream);
+            call.on('stream', a => playAudio(a));
+            peersConnected.push(id);
+        }
+
+        function playAudio(stream) {
+            const a = document.createElement('audio');
+            a.srcObject = stream; a.autoplay = true;
+            document.body.appendChild(a);
+            a.play().catch(e => console.log(e));
+            document.getElementById('connection-status').innerText = "🔊 Active";
+        }
+
+        function toggleMic(btn) {
+            if (myStream) {
+                const t = myStream.getAudioTracks()[0];
+                t.enabled = !t.enabled;
+                t.enabled ? btn.classList.remove('off') : btn.classList.add('off');
+            } else alert("Click JOIN AUDIO first.");
+        }
+
+        function toggleCam(btn) {
+            fetch('/toggle_camera', { method:'POST' }).then(r => r.json())
+            .then(d => { d.state === 'OFF' ? btn.classList.add('off') : btn.classList.remove('off'); });
+        }
+
+        window.addEventListener('beforeunload', () =>
+            fetch('/leave_audio_room', { method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ peer_id: myPeerId }) })
+        );
+        {% endif %}
+    </script>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1rem;">
+    <h2 style="margin:0;">📋 Emotion History Log</h2>
+    <div>
+        <a href="/download_emotion_logs" class="btn-blue" style="margin-right:10px;">📥 Download CSV</a>
+        <a href="/teacher" class="btn-red">← Back</a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div style="display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem;">
+    {% set colors = {'Engaged':'#28a745','Thinking':'#17a2b8','Bored':'#ffc107','Distracted':'#6c757d','Confused':'#dc3545','Frustrated':'#d35400'} %}
+    {% for emotion, count in summary %}
+    <div class="card" style="flex:1; min-width:120px; text-align:center; border-top: 4px solid {{ colors.get(emotion, '#007bff') }}; padding: 1rem;">
+        <div style="font-size:1.8rem; font-weight:bold; color:{{ colors.get(emotion, '#007bff') }};">{{ count }}</div>
+        <div style="color:#666; font-size:0.85rem;">{{ emotion }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Filter Bar -->
+<div class="card" style="margin-bottom:1rem; display:flex; gap:1rem; align-items:center; flex-wrap:wrap;">
+
+    <input type="text" id="searchBox" placeholder="🔍 Search anything..."
+           onkeyup="filterTable()"
+           style="flex:1; min-width:180px; padding:10px; border:1px solid #ddd; border-radius:6px; margin:0;">
+
+    <select id="studentFilter" onchange="filterTable()"
+            style="padding:10px; border:1px solid #ddd; border-radius:6px; min-width:180px; margin:0;">
+        <option value="">👤 All Students</option>
+        {% for student in students %}
+            <option value="{{ student }}">{{ student }}</option>
+        {% endfor %}
+    </select>
+
+    <select id="emotionFilter" onchange="filterTable()"
+            style="padding:10px; border:1px solid #ddd; border-radius:6px; min-width:160px; margin:0;">
+        <option value="">😶 All Emotions</option>
+        <option value="Engaged">🌟 Engaged</option>
+        <option value="Thinking">🧠 Thinking</option>
+        <option value="Bored">😴 Bored</option>
+        <option value="Distracted">👀 Distracted</option>
+        <option value="Confused">😕 Confused</option>
+        <option value="Frustrated">😤 Frustrated</option>
+    </select>
+
+    <button onclick="resetFilters()"
+            style="padding:10px 18px; background:#6c757d; color:white; border:none; border-radius:6px; cursor:pointer;">
+        ✖ Reset
+    </button>
+
+    <span id="rowCount" style="color:#666; font-size:0.9rem; white-space:nowrap;"></span>
+</div>
+
+<!-- Logs Table -->
+<div class="card">
+    <table id="logTable" style="width:100%; border-collapse:collapse;">
+        <thead>
+            <tr style="background:#343a40; color:white;">
+                <th style="padding:12px; text-align:left;">#</th>
+                <th style="padding:12px; text-align:left;">👤 Student</th>
+                <th style="padding:12px; text-align:left;">😶 Emotion</th>
+                <th style="padding:12px; text-align:left;">🕐 Time</th>
+                <th style="padding:12px; text-align:left;">📅 Date</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            {% set bg = {'Engaged':'#d4edda','Thinking':'#d1ecf1','Bored':'#fff3cd','Distracted':'#e2e3e5','Confused':'#f8d7da','Frustrated':'#fde8d8'} %}
+            {% set icons = {'Engaged':'🌟','Thinking':'🧠','Bored':'😴','Distracted':'👀','Confused':'😕','Frustrated':'😤'} %}
+            {% for row in logs %}
+            <tr class="data-row"
+                data-student="{{ row[0] }}"
+                data-emotion="{{ row[1] }}"
+                style="border-bottom:1px solid #eee; background:{{ bg.get(row[1], 'white') }};">
+                <td style="padding:10px; color:#999; font-size:0.85rem;">{{ loop.index }}</td>
+                <td style="padding:10px; font-weight:bold;">{{ row[0] }}</td>
+                <td style="padding:10px;">{{ icons.get(row[1], '') }} {{ row[1] }}</td>
+                <td style="padding:10px;">{{ row[2] }}</td>
+                <td style="padding:10px;">{{ row[3] }}</td>
+            </tr>
+            {% endfor %}
+            {% if not logs %}
+            <tr>
+                <td colspan="5" style="text-align:center; padding:2rem; color:#999;">
+                    No emotion records yet. Start a class session first!
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+    <div id="noResults" style="display:none; text-align:center; padding:2rem; color:#999;">
+        No records match your filters.
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function filterTable() {
+        const search  = document.getElementById('searchBox').value.toLowerCase();
+        const student = document.getElementById('studentFilter').value.toLowerCase();
+        const emotion = document.getElementById('emotionFilter').value.toLowerCase();
+        const rows    = document.querySelectorAll('.data-row');
+        let visible   = 0;
+
+        rows.forEach(row => {
+            const rowStudent = row.getAttribute('data-student').toLowerCase();
+            const rowEmotion = row.getAttribute('data-emotion').toLowerCase();
+            const rowText    = row.innerText.toLowerCase();
+
+            const matchSearch  = rowText.includes(search);
+            const matchStudent = student === '' || rowStudent === student;
+            const matchEmotion = emotion === '' || rowEmotion === emotion;
+
+            if (matchSearch && matchStudent && matchEmotion) {
+                row.style.display = '';
+                visible++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        document.getElementById('rowCount').innerText =
+            `Showing ${visible} of ${rows.length} records`;
+        document.getElementById('noResults').style.display =
+            (visible === 0 && rows.length > 0) ? 'block' : 'none';
+    }
+
+    function resetFilters() {
+        document.getElementById('searchBox').value     = '';
+        document.getElementById('studentFilter').value = '';
+        document.getElementById('emotionFilter').value = '';
+        filterTable();
+    }
+
+    window.onload = () => filterTable();
+</script>
+{% endblock %}

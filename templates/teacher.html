@@ -1,0 +1,403 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- AUTO CONFUSION ALERT -->
+<div id="autoAlertBanner">
+    🚨 AUTO ALERT: <span id="autoAlertText"></span> — Pause and check in with your class!
+</div>
+
+<div class="grid">
+    <div>
+        <!-- TOOLBAR -->
+        <div class="card" style="padding:1rem;">
+            <div class="toolbar">
+                <button id="sessionBtn" onclick="startSession()" class="tb-green">▶ Start Session</button>
+                <a href="/create_poll"       class="tb-teal">📊 New Poll</a>
+                <a href="/sessions"          class="tb-purple">📁 Sessions</a>
+                <a href="/emotion_history"   class="tb-orange">📋 Logs</a>
+                <a href="/download_attendance" class="tb-blue">📥 Attendance</a>
+                <button id="pipBtn" onclick="togglePip()" class="tb-indigo">📹 Go Live (PiP)</button>
+                <button onclick="toggleMeetingPanel()" class="tb-indigo">🔗 Meeting Link</button>
+                <a href="/end_class"         class="tb-red">⏹ End Class</a>
+            </div>
+            <div class="session-badge" id="sessionStatus">
+                🟢 Session Active — Recording emotions to database
+            </div>
+        </div>
+
+        <!-- MEETING LINK PANEL -->
+        <div id="meetingPanel" class="card" style="display:none; border-color:rgba(40,53,147,0.3); border-left: 4px solid #3949ab;">
+            <h3>🔗 Meeting Link</h3>
+
+            <!-- No link yet -->
+            <div id="meetingNoLink" style="text-align:center; padding: 10px 0;">
+                <p style="color:#888; font-size:.88rem; margin-bottom:14px;">
+                    Generate a link and share it with your students so they can join the class.
+                </p>
+                <button onclick="generateMeetingLink()"
+                        style="background:#3949ab; color:white; border:none; padding:10px 22px;
+                               border-radius:8px; font-size:.88rem; font-weight:600;
+                               cursor:pointer; font-family:'Inter',sans-serif;">
+                    ✨ Generate Link
+                </button>
+            </div>
+
+            <!-- Link active -->
+            <div id="meetingLinkActive" style="display:none;">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+                    <span style="background:#e8f5e9; color:#2e7d32; font-size:.72rem;
+                                 font-weight:700; padding:3px 10px; border-radius:20px;
+                                 border:1px solid #c8e6c9;">● ACTIVE</span>
+                    <span id="meetingCreatedAt" style="color:#aaa; font-size:.75rem;"></span>
+                </div>
+
+                <div style="background:#f0f2f5; border:1px solid #e0e0e0; border-radius:10px;
+                            padding:10px 14px; display:flex; align-items:center; gap:8px;
+                            margin-bottom:12px;">
+                    <span id="meetingLinkText"
+                          style="font-size:.82rem; color:#283593; font-weight:600;
+                                 word-break:break-all; flex:1;"></span>
+                    <button onclick="copyMeetingLink()" id="copyBtn"
+                            title="Copy link"
+                            style="background:#3949ab; color:white; border:none;
+                                   padding:7px 14px; border-radius:7px; cursor:pointer;
+                                   font-size:.78rem; font-weight:600; white-space:nowrap;
+                                   font-family:'Inter',sans-serif;">
+                        📋 Copy
+                    </button>
+                </div>
+
+                <button onclick="revokeMeetingLink()"
+                        style="background:#ffebee; color:#c62828; border:1px solid #ffcdd2;
+                               padding:7px 18px; border-radius:8px; font-size:.78rem;
+                               font-weight:600; cursor:pointer; font-family:'Inter',sans-serif;">
+                    🗑 Revoke Link
+                </button>
+            </div>
+        </div>
+
+
+        <div class="card">
+            <h3>📹 Live Classroom Feed</h3>
+            <div class="feed-container">
+                <img src="/video_feed" class="feed" alt="Live Feed">
+                <button id="join-audio-btn" class="join-audio-btn" onclick="startAudio()">
+                    <i class="fas fa-phone-alt"></i> JOIN AUDIO
+                </button>
+                <div class="audio-status" id="connection-status">Audio Disconnected</div>
+                <div class="controls">
+                    <button class="icon-btn" onclick="toggleCam(this)" title="Toggle Camera"><i class="fas fa-video"></i></button>
+                    <button class="icon-btn" onclick="toggleMic(this)" title="Toggle Mic"><i class="fas fa-microphone"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MULTI-LINE EMOTION CHART -->
+        <div class="card">
+            <h3>📈 Emotion Trends Over Time</h3>
+            <div style="height:240px;"><canvas id="lineChart"></canvas></div>
+        </div>
+
+        <!-- HEATMAP -->
+        <div class="card">
+            <h3>🌡️ Emotion Heatmap
+                <span style="font-size:.75rem;color:#bbb;font-weight:400;margin-left:4px;">per student · per minute</span>
+            </h3>
+            <div id="heatmapContainer" style="overflow-x:auto;">
+                <div id="heatmapGrid" style="font-size:.78rem;min-width:400px;">
+                    <div style="color:#bbb;text-align:center;padding:20px;">Waiting for student data...</div>
+                </div>
+            </div>
+            <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;">
+                {% for label,color in [('Engaged','#4caf50'),('Thinking','#2196f3'),('Bored','#ffc107'),('Distracted','#9e9e9e'),('Confused','#f44336'),('Frustrated','#ff5722')] %}
+                <span style="background:{{color}};color:white;padding:3px 10px;border-radius:6px;font-size:.73rem;font-weight:600;">{{label}}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <!-- ALERT BOX -->
+        <div id="alertBox" class="card">
+            <div style="font-size:1.8rem;">⚠️</div>
+            <h3 style="color:#ef5350;margin:5px 0;">ALERT</h3>
+            <p id="alertText" style="color:#333;font-size:.9rem;"></p>
+        </div>
+
+        <!-- ACTIVE STUDENTS -->
+        <div class="card" style="text-align:center;">
+            <div style="font-size:3rem;">👥</div>
+            <div class="stat-num" id="student_count">0</div>
+            <div class="stat-label">Active Students</div>
+        </div>
+
+        <!-- REAL-TIME MOOD -->
+        <div class="card">
+            <h3>🎭 Real-Time Mood</h3>
+            <div style="height:200px;"><canvas id="pieChart"></canvas></div>
+            <div style="text-align:center;margin:12px 0;">
+                <span style="font-size:.8rem;color:rgba(255,255,255,0.45);">DOMINANT VIBE</span>
+                <b id="vibe">Waiting...</b>
+            </div>
+            <div class="advice-box">
+                <div class="advice-label">🤖 AI Recommendation</div>
+                <div id="ai_advice">Waiting for data...</div>
+            </div>
+        </div>
+
+        <!-- RAISE HAND QUEUE -->
+        <div class="card" style="border-color:rgba(239,83,80,0.3);">
+            <h3>✋ Hand Raise Queue <span class="hand-badge" id="handCount">0</span></h3>
+            <div id="handQueue">
+                <div style="color:#bbb;text-align:center;padding:12px;font-size:.88rem;">No hands raised</div>
+            </div>
+        </div>
+
+        <!-- POLL RESULTS -->
+        <div id="poll_card" class="card" style="border-color:rgba(105,240,174,0.3);display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h3 style="margin-bottom:0;">📊 Live Poll</h3>
+                <a href="/close_poll" style="color:#ef5350;font-size:.8rem;font-weight:600;">[Stop]</a>
+            </div>
+            <div id="poll_results" style="margin-top:12px;"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const EMOTION_COLORS={'Engaged':'#4caf50','Thinking':'#2196f3','Bored':'#ffc107','Distracted':'#9e9e9e','Confused':'#f44336','Frustrated':'#ff5722'};
+const EMOTION_EMOJI={'Engaged':'🌟','Thinking':'🧠','Bored':'😴','Distracted':'👀','Confused':'😕','Frustrated':'😤'};
+
+// Charts
+const ctxPie=document.getElementById('pieChart').getContext('2d');
+const myPieChart=new Chart(ctxPie,{
+    type:'doughnut',
+    data:{labels:['Engaged','Thinking','Bored','Distracted','Confused'],
+          datasets:[{data:[0,0,0,0,0],backgroundColor:['#4caf50','#2196f3','#ffc107','#9e9e9e','#f44336'],borderWidth:0}]},
+    options:{responsive:true,maintainAspectRatio:false,
+             plugins:{legend:{position:'bottom',labels:{boxWidth:10,color:'#555',font:{family:'Poppins',size:11}}}},
+             cutout:'65%'}
+});
+
+const ctxLine=document.getElementById('lineChart').getContext('2d');
+const EMOTION_LINES=[
+    {key:'Engaged',    label:'Engaged',    color:'#2e7d32'},
+    {key:'Thinking',   label:'Thinking',   color:'#1565c0'},
+    {key:'Bored',      label:'Bored',      color:'#f9a825'},
+    {key:'Distracted', label:'Distracted', color:'#757575'},
+    {key:'Confused',   label:'Confused',   color:'#c62828'},
+];
+const myLineChart=new Chart(ctxLine,{
+    type:'line',
+    data:{
+        labels:[],
+        datasets:EMOTION_LINES.map(e=>({
+            label:e.label, data:[], borderColor:e.color,
+            backgroundColor:e.color+'18', fill:false,
+            tension:0.4, pointBackgroundColor:e.color,
+            pointRadius:3, pointHoverRadius:5, borderWidth:2.5
+        }))
+    },
+    options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:'index', intersect:false},
+        scales:{
+            y:{min:0,max:100,
+               grid:{color:'rgba(0,0,0,0.06)'},
+               ticks:{color:'#888',font:{size:11},callback:v=>v+'%'},
+               title:{display:true,text:'Students (%)',color:'#aaa',font:{size:11}}},
+            x:{grid:{color:'rgba(0,0,0,0.04)'},
+               ticks:{color:'#888',font:{size:10},maxRotation:45}}
+        },
+        plugins:{
+            legend:{position:'top',labels:{boxWidth:12,boxHeight:12,color:'#333',font:{size:11},padding:14}},
+            tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y}%`}}
+        }
+    }
+});
+
+let lastAlertCount=0,lastSentiment=null;
+
+function startSession(){
+    fetch('/start_session',{method:'POST'}).then(r=>r.json()).then(()=>{
+        document.getElementById('sessionStatus').style.display='block';
+        const btn=document.getElementById('sessionBtn');
+        btn.innerText='🟢 Recording';btn.style.background='rgba(46,125,50,0.4)';btn.disabled=true;
+    });
+}
+
+// ── Meeting Link ──────────────────────────────────────────────────────────
+function toggleMeetingPanel(){
+    const panel = document.getElementById('meetingPanel');
+    const isHidden = panel.style.display === 'none';
+    panel.style.display = isHidden ? 'block' : 'none';
+    if(isHidden) refreshMeetingUI();
+}
+
+function refreshMeetingUI(){
+    fetch('/get_meeting_link').then(r=>r.json()).then(data=>{
+        if(data.active && data.room_id){
+            showActiveMeetingLink(data.room_id, data.created_at);
+        } else {
+            document.getElementById('meetingNoLink').style.display = 'block';
+            document.getElementById('meetingLinkActive').style.display = 'none';
+        }
+    });
+}
+
+function showActiveMeetingLink(roomId, createdAt){
+    document.getElementById('meetingNoLink').style.display = 'none';
+    document.getElementById('meetingLinkActive').style.display = 'block';
+    const link = window.location.origin + '/join/' + roomId;
+    document.getElementById('meetingLinkText').innerText = link;
+    document.getElementById('meetingCreatedAt').innerText = 'Created at ' + createdAt;
+}
+
+function togglePip(){
+    fetch('/toggle_teacher_pip', {method:'POST'}).then(r=>r.json()).then(data=>{
+        const btn = document.getElementById('pipBtn');
+        if(data.active){
+            btn.innerText = '🔴 Stop PiP';
+            btn.style.background = 'rgba(198,40,40,0.12)';
+            btn.style.color = '#c62828';
+            btn.style.border = '1px solid #ffcdd2';
+        } else {
+            btn.innerText = '📹 Go Live (PiP)';
+            btn.style.background = '';
+            btn.style.color = '';
+            btn.style.border = '';
+        }
+    });
+}
+
+function generateMeetingLink(){
+    fetch('/generate_meeting_link', {method:'POST'}).then(r=>r.json()).then(data=>{
+        if(data.room_id) showActiveMeetingLink(data.room_id, data.created_at);
+    });
+}
+
+function copyMeetingLink(){
+    const text = document.getElementById('meetingLinkText').innerText;
+    navigator.clipboard.writeText(text).then(()=>{
+        const btn = document.getElementById('copyBtn');
+        btn.innerText = '✅ Copied!';
+        setTimeout(()=>{ btn.innerText = '📋 Copy'; }, 2000);
+    });
+}
+
+function revokeMeetingLink(){
+    if(!confirm('Revoke the current meeting link? Students using it will no longer be able to join.')) return;
+    fetch('/revoke_meeting_link', {method:'POST'}).then(r=>r.json()).then(()=>{
+        document.getElementById('meetingNoLink').style.display = 'block';
+        document.getElementById('meetingLinkActive').style.display = 'none';
+    });
+}
+
+
+function dismissHand(username){
+    fetch('/dismiss_hand',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:username})})
+    .then(r=>r.json());
+}
+
+function updateHandQueue(data){
+    const queue=data.hand_queue||[];
+    document.getElementById('handCount').innerText=queue.length;
+    const box=document.getElementById('handQueue');
+    if(!queue.length){
+        box.innerHTML='<div style="color:#bbb;text-align:center;padding:12px;font-size:.88rem;">No hands raised</div>';
+        return;
+    }
+    box.innerHTML=queue.map(h=>`
+        <div class="hand-item">
+            <div>
+                <span style="font-size:1.2rem;">✋</span>
+                <b style="margin-left:6px;">${h.username}</b>
+                <span style="color:#bbb;font-size:.78rem;margin-left:6px;">@ ${h.time}</span>
+            </div>
+            <button onclick="dismissHand('${h.username}')" style="background:rgba(105,240,174,0.2);color:#69f0ae;border:1px solid rgba(105,240,174,0.3);border-radius:8px;padding:4px 12px;cursor:pointer;font-size:.78rem;font-weight:600;font-family:'Poppins',sans-serif;">
+                ✓ Done
+            </button>
+        </div>`).join('');
+}
+
+function renderHeatmap(data){
+    const container=document.getElementById('heatmapGrid');
+    const students=Object.keys(data);
+    if(!students.length){container.innerHTML='<div style="color:#bbb;text-align:center;padding:20px;">No data yet. Start a session!</div>';return;}
+    const allTimes=[...new Set(students.flatMap(s=>data[s].map(e=>e.time)))].sort().slice(-20);
+    let html='<table style="border-collapse:separate;border-spacing:2px;width:100%;"><tr><th style="text-align:left;padding:4px 8px;color:rgba(255,255,255,0.5);font-size:.72rem;">Student</th>';
+    allTimes.forEach(t=>html+=`<th style="text-align:center;font-size:.65rem;color:#bbb;min-width:32px;">${t}</th>`);
+    html+='</tr>';
+    students.forEach(s=>{
+        const bt={};data[s].forEach(e=>bt[e.time]=e.emotion);
+        html+=`<tr><td style="padding:4px 8px;font-weight:600;white-space:nowrap;font-size:.82rem;">${s}</td>`;
+        allTimes.forEach(t=>{
+            const em=bt[t]||'';const col=em?(EMOTION_COLORS[em]||'#333'):'rgba(255,255,255,0.06)';
+            html+=`<td title="${em||'No data'}" style="background:${col};text-align:center;padding:4px 2px;border-radius:5px;">${EMOTION_EMOJI[em]||''}</td>`;
+        });
+        html+='</tr>';
+    });
+    html+='</table>';
+    container.innerHTML=html;
+}
+
+setInterval(()=>{
+    fetch('/get_stats').then(r=>r.json()).then(data=>{
+        document.getElementById('student_count').innerText=data.active_students;
+        document.getElementById('vibe').innerText=data.current_vibe;
+        document.getElementById('ai_advice').innerHTML=data.teacher_advice;
+
+        const banner=document.getElementById('autoAlertBanner');
+        if(data.auto_confusion&&data.auto_confusion.active){
+            banner.style.display='block';
+            document.getElementById('autoAlertText').innerText=`${data.auto_confusion.count} students are Confused at ${data.auto_confusion.time}`;
+        }else{banner.style.display='none';}
+
+        updateHandQueue(data);
+
+        if(data.poll&&data.poll.active){
+            document.getElementById('poll_card').style.display='block';
+            const total=Object.values(data.poll.options).reduce((a,b)=>a+b,0);
+            let html='';
+            for(const[opt,count] of Object.entries(data.poll.options)){
+                const pct=total>0?Math.round((count/total)*100):0;
+                html+=`<div style="margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                        <span style="font-size:.88rem;">${opt}</span>
+                        <b style="color:#1565c0;">${count} (${pct}%)</b>
+                    </div>
+                    <div class="poll-bar-wrap"><div class="poll-bar-fill" style="width:${pct}%"></div></div>
+                </div>`;
+            }
+            document.getElementById('poll_results').innerHTML=html;
+        }else{document.getElementById('poll_card').style.display='none';}
+
+        const box=document.getElementById('alertBox');
+        if(data.latest_sentiment&&data.latest_sentiment!==lastSentiment){
+            document.getElementById('alertText').innerText=data.latest_sentiment;
+            box.style.display='block';lastSentiment=data.latest_sentiment;
+            setTimeout(()=>box.style.display='none',5000);
+        }else if(data.alerts>lastAlertCount){
+            document.getElementById('alertText').innerText='✋ Confusion Signal from a Student!';
+            box.style.display='block';setTimeout(()=>box.style.display='none',3000);lastAlertCount=data.alerts;
+        }
+
+        myPieChart.data.datasets[0].data=[data.history.Engaged,data.history.Thinking,data.history.Bored,data.history.Distracted,data.history.Confused];
+        myPieChart.update();
+        // Update multi-line emotion chart
+        if(data.timeline.length>0){
+            myLineChart.data.labels=data.timeline.map(t=>t.time);
+            EMOTION_LINES.forEach((e,i)=>{
+                myLineChart.data.datasets[i].data=data.timeline.map(t=>t[e.key]||0);
+            });
+            myLineChart.update('none'); // 'none' = no animation on update for smooth live feel
+        }
+    });
+},1000);
+
+setInterval(()=>fetch('/get_heatmap').then(r=>r.json()).then(renderHeatmap),5000);
+fetch('/get_heatmap').then(r=>r.json()).then(renderHeatmap);
+</script>
+{% endblock %}

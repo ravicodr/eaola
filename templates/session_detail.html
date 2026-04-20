@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% if sess %}
+{% set sid, date, start, end, duration, avg_score, alerts = sess %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:10px;">
+    <h2 style="margin:0;">📊 Session #{{ sid }} — {{ date }}</h2>
+    <div>
+        <a href="/download_emotion_logs" class="btn-blue" style="margin-right:8px;">📥 Download CSV</a>
+        <a href="/sessions" class="btn-red">← All Sessions</a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:1rem; margin-bottom:1.5rem;">
+    <div class="card" style="text-align:center; border-top:4px solid #28a745;">
+        <div style="font-size:2rem; font-weight:bold; color:#28a745;">{{ avg_score }}%</div>
+        <div style="color:#666; font-size:0.85rem;">Avg Engagement</div>
+    </div>
+    <div class="card" style="text-align:center; border-top:4px solid #007bff;">
+        <div style="font-size:2rem; font-weight:bold; color:#007bff;">{{ duration or 'N/A' }}</div>
+        <div style="color:#666; font-size:0.85rem;">Duration</div>
+    </div>
+    <div class="card" style="text-align:center; border-top:4px solid #dc3545;">
+        <div style="font-size:2rem; font-weight:bold; color:#dc3545;">{{ alerts }}</div>
+        <div style="color:#666; font-size:0.85rem;">Alerts</div>
+    </div>
+    <div class="card" style="text-align:center; border-top:4px solid #6f42c1;">
+        <div style="font-size:2rem; font-weight:bold; color:#6f42c1;">{{ students|length }}</div>
+        <div style="color:#666; font-size:0.85rem;">Students</div>
+    </div>
+    <div class="card" style="text-align:center; border-top:4px solid #17a2b8;">
+        <div style="font-size:1.1rem; font-weight:bold; color:#17a2b8;">{{ start }}</div>
+        <div style="color:#666; font-size:0.85rem;">Start Time</div>
+    </div>
+    <div class="card" style="text-align:center; border-top:4px solid #fd7e14;">
+        <div style="font-size:1.1rem; font-weight:bold; color:#fd7e14;">{{ end or 'Active' }}</div>
+        <div style="color:#666; font-size:0.85rem;">End Time</div>
+    </div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem;">
+    <!-- Emotion Breakdown -->
+    <div class="card">
+        <h3 style="margin-top:0;">🎭 Emotion Breakdown</h3>
+        {% set colors = {'Engaged':'#28a745','Thinking':'#17a2b8','Bored':'#ffc107','Distracted':'#6c757d','Confused':'#dc3545','Frustrated':'#d35400'} %}
+        {% set total_logs = emotion_breakdown | sum(attribute=1) %}
+        {% for emotion, count in emotion_breakdown %}
+        {% set pct = ((count / total_logs) * 100) | int if total_logs > 0 else 0 %}
+        <div style="margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
+                <span>{{ emotion }}</span>
+                <b style="color:{{ colors.get(emotion,'#333') }}">{{ count }} ({{ pct }}%)</b>
+            </div>
+            <div style="background:#eee;height:10px;border-radius:5px;">
+                <div style="background:{{ colors.get(emotion,'#007bff') }};height:10px;border-radius:5px;width:{{ pct }}%;"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Students in Session -->
+    <div class="card">
+        <h3 style="margin-top:0;">👥 Students in This Session</h3>
+        {% if students %}
+            {% for student in students %}
+            <div style="padding:10px; background:#f8f9fa; border-radius:6px; margin-bottom:6px; display:flex; align-items:center; gap:10px;">
+                <div style="width:35px;height:35px;background:#343a40;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;">
+                    {{ student[0].upper() }}
+                </div>
+                <b>{{ student }}</b>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p style="color:#999;">No students recorded in this session.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- HEATMAP -->
+<div class="card">
+    <h3 style="margin-top:0;">🌡️ Emotion Heatmap <small style="color:#999; font-weight:normal; font-size:0.8rem;">(per student · per minute)</small></h3>
+
+    {% if heatmap %}
+    {% set all_times = [] %}
+    {% for student, entries in heatmap.items() %}
+        {% for entry in entries %}
+            {% if entry.time not in all_times %}
+                {% set _ = all_times.append(entry.time) %}
+            {% endif %}
+        {% endfor %}
+    {% endfor %}
+
+    {% set colors = {'Engaged':'#27ae60','Thinking':'#2980b9','Bored':'#f39c12','Distracted':'#95a5a6','Confused':'#e74c3c','Frustrated':'#d35400'} %}
+    {% set icons  = {'Engaged':'🌟','Thinking':'🧠','Bored':'😴','Distracted':'👀','Confused':'😕','Frustrated':'😤'} %}
+
+    <div style="overflow-x:auto;">
+        <table style="border-collapse:collapse; min-width:500px; width:100%;">
+            <thead>
+                <tr>
+                    <th style="padding:6px 10px; text-align:left; color:#666; min-width:90px;">Student</th>
+                    {% for t in all_times | sort %}
+                    <th style="padding:3px; text-align:center; font-size:0.7rem; color:#888; min-width:38px;">{{ t }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for student, entries in heatmap.items() %}
+                {% set emotion_by_time = {} %}
+                {% for entry in entries %}
+                    {% set _ = emotion_by_time.update({entry.time: entry.emotion}) %}
+                {% endfor %}
+                <tr>
+                    <td style="padding:5px 10px; font-weight:bold; white-space:nowrap;">{{ student }}</td>
+                    {% for t in all_times | sort %}
+                    {% set em = emotion_by_time.get(t, '') %}
+                    <td title="{{ em or 'No data' }}"
+                        style="background:{{ colors.get(em,'#ecf0f1') if em else '#ecf0f1' }};
+                               text-align:center; padding:5px 3px; border-radius:4px;">
+                        {{ icons.get(em,'') }}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Legend -->
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+        {% for em, color in colors.items() %}
+        <span style="background:{{ color }}; color:white; padding:3px 10px; border-radius:4px; font-size:0.78rem;">
+            {{ icons.get(em,'') }} {{ em }}
+        </span>
+        {% endfor %}
+    </div>
+
+    {% else %}
+        <div style="text-align:center; padding:2rem; color:#999;">No emotion data recorded in this session.</div>
+    {% endif %}
+</div>
+
+{% else %}
+<div class="card" style="text-align:center; padding:3rem; color:#999;">
+    <h3>Session not found.</h3>
+    <a href="/sessions" class="btn" style="display:inline-block; width:auto; padding:10px 30px;">← All Sessions</a>
+</div>
+{% endif %}
+
+{% endblock %}

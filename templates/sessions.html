@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+    <h2 style="margin:0;">📁 Past Class Sessions</h2>
+    <a href="/teacher" class="btn-red">← Back to Dashboard</a>
+</div>
+
+{% if sessions %}
+<div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap:1rem;">
+    {% for sess in sessions %}
+    {% set sid, date, start, end, duration, avg_score, alerts = sess %}
+    <div class="card" style="border-top:4px solid
+        {% if avg_score >= 70 %}#28a745
+        {% elif avg_score >= 40 %}#ffc107
+        {% else %}#dc3545{% endif %};">
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-size:1.3rem; font-weight:bold; color:#343a40;">Session #{{ sid }}</div>
+            <div style="font-size:2rem; font-weight:bold; color:
+                {% if avg_score >= 70 %}#28a745
+                {% elif avg_score >= 40 %}#ffc107
+                {% else %}#dc3545{% endif %};">
+                {{ avg_score }}%
+            </div>
+        </div>
+
+        <div style="color:#666; font-size:0.85rem; margin:8px 0;">
+            <div>📅 <b>{{ date }}</b></div>
+            <div>🕐 {{ start }} → {{ end or 'In progress' }}</div>
+            <div>⏱️ Duration: {{ duration or 'N/A' }}</div>
+            <div>🚨 Alerts: {{ alerts }}</div>
+        </div>
+
+        <a href="/session/{{ sid }}" class="btn-blue" style="display:block; text-align:center; padding:8px; margin-top:10px; border-radius:6px; text-decoration:none;">
+            View Detail & Heatmap →
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="card" style="text-align:center; padding:3rem; color:#999;">
+    <div style="font-size:3rem;">📭</div>
+    <h3>No sessions recorded yet.</h3>
+    <p>Click <b>▶ Start Session</b> on the teacher dashboard before class begins.</p>
+    <a href="/teacher" class="btn" style="display:inline-block; width:auto; padding:10px 30px;">Go to Dashboard</a>
+</div>
+{% endif %}
+
+{% endblock %}

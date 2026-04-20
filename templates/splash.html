@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EAOLA - Emotion Aware Online Learning Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Poppins',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a237e 0%,#283593 40%,#3949ab 70%,#5c6bc0 100%);overflow:hidden;}
+
+        /* Bubbles */
+        .bubble{position:fixed;border-radius:50%;background:rgba(255,255,255,0.06);animation:floatBubble 8s ease-in-out infinite;}
+        .bubble:nth-child(1){width:90px;height:90px;top:8%;left:6%;animation-delay:0s;}
+        .bubble:nth-child(2){width:55px;height:55px;top:18%;right:8%;animation-delay:1.5s;}
+        .bubble:nth-child(3){width:130px;height:130px;bottom:12%;left:4%;animation-delay:3s;}
+        .bubble:nth-child(4){width:65px;height:65px;bottom:22%;right:7%;animation-delay:2s;}
+        .bubble:nth-child(5){width:45px;height:45px;top:45%;left:2%;animation-delay:4s;}
+        .bubble:nth-child(6){width:75px;height:75px;top:65%;right:4%;animation-delay:5s;}
+        @keyframes floatBubble{0%,100%{transform:translateY(0) scale(1);opacity:.4;}50%{transform:translateY(-30px) scale(1.08);opacity:.7;}}
+
+        /* Card */
+        .card{background:rgba(255,255,255,0.09);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.18);border-radius:32px;padding:3rem 2.5rem;max-width:440px;width:92%;text-align:center;position:relative;z-index:10;box-shadow:0 25px 60px rgba(0,0,0,0.3);animation:slideUp .8s cubic-bezier(.16,1,.3,1);}
+        @keyframes slideUp{from{opacity:0;transform:translateY(50px);}to{opacity:1;transform:translateY(0);}}
+
+        /* Icon */
+        .icon-wrap{width:120px;height:120px;border-radius:28px;background:linear-gradient(135deg,#0d1b4b,#1565c0);margin:0 auto 1.5rem;display:flex;align-items:center;justify-content:center;box-shadow:0 0 40px rgba(66,165,245,0.5),0 0 80px rgba(66,165,245,0.2);animation:iconGlow 3s ease-in-out infinite;}
+        @keyframes iconGlow{0%,100%{box-shadow:0 0 40px rgba(66,165,245,0.5),0 0 80px rgba(66,165,245,0.2);}50%{box-shadow:0 0 60px rgba(66,165,245,0.9),0 0 120px rgba(66,165,245,0.4);}}
+        .icon-emoji{font-size:56px;}
+
+        .welcome{font-size:1rem;color:rgba(255,255,255,0.8);margin-bottom:.3rem;font-weight:400;}
+
+        /* Colorful letters */
+        .eaola-title{font-size:4rem;font-weight:900;letter-spacing:3px;margin-bottom:.3rem;line-height:1;}
+        .e{color:#FF5252;text-shadow:0 0 20px rgba(255,82,82,0.6);}
+        .a1{color:#FFAB40;text-shadow:0 0 20px rgba(255,171,64,0.6);}
+        .o{color:#69F0AE;text-shadow:0 0 20px rgba(105,240,174,0.6);}
+        .l{color:#40C4FF;text-shadow:0 0 20px rgba(64,196,255,0.6);}
+        .a2{color:#E040FB;text-shadow:0 0 20px rgba(224,64,251,0.6);}
+
+        .subtitle{font-size:.82rem;color:rgba(255,255,255,0.65);margin-bottom:2rem;letter-spacing:.5px;}
+
+        /* Features */
+        .features{display:flex;gap:10px;justify-content:center;margin-bottom:2rem;}
+        .feat{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:14px;padding:12px 10px;flex:1;}
+        .feat-icon{font-size:1.5rem;display:block;margin-bottom:5px;}
+        .feat-label{font-size:.7rem;color:rgba(255,255,255,0.8);font-weight:600;line-height:1.4;}
+
+        .tagline{font-size:1.2rem;font-weight:800;color:white;font-style:italic;margin-bottom:.4rem;}
+        .tagline-sub{font-size:.78rem;color:rgba(255,255,255,0.55);margin-bottom:2rem;}
+
+        /* Button */
+        .btn{display:block;width:100%;padding:17px;background:linear-gradient(135deg,#2196f3,#42a5f5);color:white;font-family:'Poppins',sans-serif;font-size:1.05rem;font-weight:700;border:none;border-radius:50px;cursor:pointer;text-decoration:none;letter-spacing:1px;box-shadow:0 8px 25px rgba(33,150,243,0.5);transition:transform .2s,box-shadow .2s;animation:btnPulse 2.5s ease-in-out infinite;}
+        .btn:hover{transform:translateY(-3px);box-shadow:0 12px 35px rgba(33,150,243,0.7);}
+        @keyframes btnPulse{0%,100%{box-shadow:0 8px 25px rgba(33,150,243,0.5);}50%{box-shadow:0 8px 40px rgba(33,150,243,0.85);}}
+    </style>
+</head>
+<body>
+    <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+    <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+
+    <div class="card">
+        <div class="icon-wrap"><span class="icon-emoji">🎓</span></div>
+
+        <div class="welcome">Welcome to</div>
+        <div class="eaola-title">
+            <span class="e">E</span><span class="a1">A</span><span class="o">O</span><span class="l">L</span><span class="a2">A</span>
+        </div>
+        <div class="subtitle">Emotion Aware Online Learning Assistant</div>
+
+        <div class="features">
+            <div class="feat"><span class="feat-icon">🎭</span><span class="feat-label">Emotion Detection</span></div>
+            <div class="feat"><span class="feat-icon">📊</span><span class="feat-label">Live Analytics</span></div>
+            <div class="feat"><span class="feat-icon">🧠</span><span class="feat-label">Smart Teaching</span></div>
+        </div>
+
+        <div class="tagline">Learn Smarter, Feel Better!</div>
+        <div class="tagline-sub">Real-time emotion monitoring for better learning outcomes</div>
+
+        <a href="/login" class="btn">Get Started →</a>
+    </div>
+</body>
+</html>

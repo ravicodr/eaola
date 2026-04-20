@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="grid">
+    <div>
+        <!-- LIVE FEED -->
+        <div class="card">
+            <h3>📹 Your Live Feed</h3>
+            <div class="feed-container">
+                <img src="/video_feed" class="feed" alt="Your Feed">
+                <button id="join-audio-btn" class="join-audio-btn" onclick="startAudio()">
+                    <i class="fas fa-phone-alt"></i> JOIN AUDIO
+                </button>
+                <div class="audio-status" id="connection-status">Audio Disconnected</div>
+                <div class="controls">
+                    <button class="icon-btn" onclick="toggleCam(this)" title="Toggle Camera"><i class="fas fa-video"></i></button>
+                    <button class="icon-btn" onclick="toggleMic(this)" title="Toggle Mic"><i class="fas fa-microphone"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MY EMOTION STATUS -->
+        <div class="card">
+            <h3>🎭 My Current Status</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center;">
+                <div style="background:rgba(41,121,255,0.1);border:1px solid rgba(100,160,255,0.2);border-radius:14px;padding:14px;">
+                    <div style="font-size:1.8rem;">🌟</div>
+                    <div style="font-size:.78rem;color:rgba(255,255,255,0.5);margin-top:4px;">Engaged</div>
+                </div>
+                <div style="background:rgba(255,193,7,0.1);border:1px solid rgba(255,193,7,0.25);border-radius:14px;padding:14px;">
+                    <div style="font-size:1.8rem;" id="myEmoji">😐</div>
+                    <div style="font-size:.78rem;color:rgba(255,255,255,0.5);margin-top:4px;" id="myEmotionLabel">Detecting...</div>
+                </div>
+                <div style="background:rgba(76,175,80,0.1);border:1px solid rgba(76,175,80,0.2);border-radius:14px;padding:14px;">
+                    <div style="font-size:1.8rem;">🧠</div>
+                    <div style="font-size:.78rem;color:rgba(255,255,255,0.5);margin-top:4px;">Thinking</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div>
+        <!-- STATUS CARD -->
+        <div class="card">
+            <h3>🎛️ Student Controls</h3>
+
+            <div class="status-live">
+                <span class="dot-live"></span>
+                <div>
+                    <div style="font-size:.85rem;font-weight:700;color:#69f0ae;">🟢 You are Live</div>
+                    <div style="font-size:.75rem;color:rgba(255,255,255,0.4);">Your emotions are being tracked</div>
+                </div>
+            </div>
+
+            <p style="color:#888;font-size:.8rem;margin-bottom:1rem;line-height:1.6;">
+                Your emotions are anonymously tracked to help your teacher improve lessons in real time.
+            </p>
+
+            <!-- CONFUSION BUTTON -->
+            <button onclick="sendSignal()" style="
+                background:linear-gradient(135deg,#c62828,#ef5350);
+                color:white;border:none;padding:16px 20px;border-radius:14px;
+                cursor:pointer;width:100%;font-size:1.05rem;font-weight:700;
+                font-family:'Poppins',sans-serif;
+                box-shadow:0 6px 20px rgba(239,83,80,0.4);
+                transition:transform .2s,box-shadow .2s;margin-bottom:10px;
+                display:flex;align-items:center;justify-content:center;gap:10px;">
+                😕 I'm Confused!
+            </button>
+            <p id="confusionMsg" style="color:#69f0ae;display:none;text-align:center;margin:5px 0;font-size:.85rem;font-weight:600;">✅ Signal Sent to Teacher!</p>
+
+            <!-- RAISE HAND BUTTON -->
+            <button id="handBtn" onclick="toggleHand()" style="
+                background:linear-gradient(135deg,#e65100,#ff9800);
+                color:white;border:none;padding:16px 20px;border-radius:14px;
+                cursor:pointer;width:100%;font-size:1.05rem;font-weight:700;
+                font-family:'Poppins',sans-serif;
+                box-shadow:0 6px 20px rgba(255,152,0,0.35);
+                transition:transform .2s,box-shadow .2s;margin-bottom:10px;
+                display:flex;align-items:center;justify-content:center;gap:10px;">
+                ✋ Raise My Hand
+            </button>
+            <p id="handMsg" style="color:#ffcc80;display:none;text-align:center;margin:5px 0;font-size:.85rem;font-weight:600;">
+                ✋ Hand Raised — Teacher Notified!
+            </p>
+        </div>
+
+        <!-- QUICK TIPS -->
+        <div class="card">
+            <h3>💡 Quick Tips</h3>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:1.3rem;">📷</span>
+                    <div>
+                        <div style="font-size:.83rem;font-weight:600;">Keep your face visible</div>
+                        <div style="font-size:.73rem;color:rgba(255,255,255,0.4);">Helps emotion detection accuracy</div>
+                    </div>
+                </div>
+                <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:1.3rem;">💡</span>
+                    <div>
+                        <div style="font-size:.83rem;font-weight:600;">Good lighting helps</div>
+                        <div style="font-size:.73rem;color:rgba(255,255,255,0.4);">Sit facing a light source</div>
+                    </div>
+                </div>
+                <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 14px;display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:1.3rem;">🔕</span>
+                    <div>
+                        <div style="font-size:.83rem;font-weight:600;">Minimize distractions</div>
+                        <div style="font-size:.73rem;color:rgba(255,255,255,0.4);">Close other tabs to stay focused</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DRIFT WARNING -->
+        <div id="driftWarning">
+            <div style="font-size:2rem;">💪</div>
+            <b style="color:#ffc107;font-size:1rem;">Hey! Looks like you're drifting.</b>
+            <p style="margin:8px 0;color:rgba(255,255,255,0.6);font-size:.85rem;">Take a breath and refocus — you've got this!</p>
+            <button onclick="document.getElementById('driftWarning').style.display='none'" style="
+                background:rgba(255,193,7,0.2);color:#ffc107;border:1px solid rgba(255,193,7,0.4);
+                padding:7px 20px;border-radius:8px;cursor:pointer;font-family:'Poppins',sans-serif;font-weight:600;">
+                OK, I'm back! 💪
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- POLL OVERLAY -->
+<div id="poll_ui" class="poll-overlay">
+    <div style="font-size:2rem;margin-bottom:8px;">📊</div>
+    <h3 style="color:#64b5f6;margin-bottom:8px;">Live Poll!</h3>
+    <p id="poll_q" style="font-size:1rem;font-weight:600;margin-bottom:14px;color:white;"></p>
+    <div id="poll_opts"></div>
+    <p style="font-size:.75rem;color:#bbb;margin-top:10px;">Tap an option to vote</p>
+</div>
+
+<!-- TEACHER PiP (Picture-in-Picture) -->
+<div id="teacherPip" style="
+    display:none;
+    position:fixed;
+    bottom:24px;
+    right:24px;
+    width:240px;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:0 8px 32px rgba(0,0,0,0.45), 0 0 0 2px rgba(21,101,192,0.6);
+    z-index:9999;
+    cursor:grab;
+    user-select:none;
+    background:#000;
+">
+    <!-- Header bar (drag handle) -->
+    <div id="pipHeader" style="
+        background:linear-gradient(90deg,#1565c0,#1976d2);
+        padding:6px 10px;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        cursor:grab;
+    ">
+        <div style="display:flex;align-items:center;gap:6px;">
+            <span style="width:8px;height:8px;background:#ef5350;border-radius:50%;display:inline-block;
+                         box-shadow:0 0 6px #ef5350;animation:pipPulse 1.2s ease-in-out infinite;"></span>
+            <span style="color:white;font-size:.75rem;font-weight:700;letter-spacing:.5px;">TEACHER LIVE</span>
+        </div>
+        <button onclick="closePip()" title="Close"
+                style="background:rgba(255,255,255,0.15);border:none;color:white;
+                       width:20px;height:20px;border-radius:50%;cursor:pointer;
+                       font-size:.7rem;display:flex;align-items:center;justify-content:center;
+                       line-height:1;">✕</button>
+    </div>
+
+    <!-- Video feed -->
+    <img id="teacherPipImg" src="" alt="Teacher Feed"
+         style="width:100%;display:block;max-height:180px;object-fit:cover;">
+
+    <!-- Resize handle hint -->
+    <div style="background:rgba(0,0,0,0.55);padding:3px 8px;text-align:center;">
+        <span style="color:rgba(255,255,255,0.4);font-size:.65rem;">drag to move</span>
+    </div>
+</div>
+
+<style>
+@keyframes pipPulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50%      { opacity:.4; transform:scale(1.3); }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const EMOJI_MAP={'Engaged':'🌟','Thinking':'🧠','Bored':'😴','Distracted':'👀','Confused':'😕','Frustrated':'😤'};
+let handRaised=false;
+
+function sendSignal(){
+    fetch('/signal_confusion',{method:'POST'}).then(()=>{
+        const msg=document.getElementById('confusionMsg');
+        msg.style.display='block';
+        setTimeout(()=>msg.style.display='none',2500);
+    });
+}
+
+function toggleHand(){
+    if(!handRaised){
+        fetch('/raise_hand',{method:'POST'}).then(r=>r.json()).then(()=>{
+            handRaised=true;
+            const btn=document.getElementById('handBtn');
+            btn.innerText='🤚 Lower My Hand';
+            btn.style.background='linear-gradient(135deg,#424242,#616161)';
+            document.getElementById('handMsg').style.display='block';
+        });
+    }else{
+        fetch('/lower_hand',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({})})
+        .then(r=>r.json()).then(()=>{
+            handRaised=false;
+            const btn=document.getElementById('handBtn');
+            btn.innerText='✋ Raise My Hand';
+            btn.style.background='linear-gradient(135deg,#e65100,#ff9800)';
+            document.getElementById('handMsg').style.display='none';
+        });
+    }
+}
+
+function vote(opt){
+    fetch('/submit_vote',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({choice:opt})})
+    .then(r=>r.json()).then(d=>{
+        document.getElementById('poll_ui').style.display='none';
+        if(d.status==='success') alert("✅ Vote submitted!");
+        else if(d.status==='already_voted') alert("You have already voted.");
+    });
+}
+
+// ── Teacher PiP ───────────────────────────────────────────────────────────
+let pipVisible = false;
+
+function closePip(){
+    document.getElementById('teacherPip').style.display = 'none';
+    pipVisible = false;
+    // Disconnect the img src so the stream is released
+    document.getElementById('teacherPipImg').src = '';
+}
+
+function showPip(){
+    const pip = document.getElementById('teacherPip');
+    const img = document.getElementById('teacherPipImg');
+    if(!pipVisible){
+        img.src = '/teacher_feed';
+        pip.style.display = 'block';
+        pipVisible = true;
+    }
+}
+
+// Draggable PiP
+(function(){
+    const pip = document.getElementById('teacherPip');
+    const handle = document.getElementById('pipHeader');
+    let dragging = false, ox = 0, oy = 0;
+
+    handle.addEventListener('mousedown', e => {
+        dragging = true;
+        ox = e.clientX - pip.getBoundingClientRect().left;
+        oy = e.clientY - pip.getBoundingClientRect().top;
+        pip.style.cursor = 'grabbing';
+        handle.style.cursor = 'grabbing';
+        e.preventDefault();
+    });
+    document.addEventListener('mousemove', e => {
+        if(!dragging) return;
+        const x = e.clientX - ox;
+        const y = e.clientY - oy;
+        // Keep within viewport
+        const maxX = window.innerWidth  - pip.offsetWidth;
+        const maxY = window.innerHeight - pip.offsetHeight;
+        pip.style.left   = Math.max(0, Math.min(x, maxX)) + 'px';
+        pip.style.top    = Math.max(0, Math.min(y, maxY)) + 'px';
+        pip.style.right  = 'auto';
+        pip.style.bottom = 'auto';
+    });
+    document.addEventListener('mouseup', () => {
+        dragging = false;
+        pip.style.cursor = 'grab';
+        handle.style.cursor = 'grab';
+    });
+    // Touch support
+    handle.addEventListener('touchstart', e => {
+        const t = e.touches[0];
+        dragging = true;
+        ox = t.clientX - pip.getBoundingClientRect().left;
+        oy = t.clientY - pip.getBoundingClientRect().top;
+    }, {passive:true});
+    document.addEventListener('touchmove', e => {
+        if(!dragging) return;
+        const t = e.touches[0];
+        pip.style.left   = Math.max(0, t.clientX - ox) + 'px';
+        pip.style.top    = Math.max(0, t.clientY - oy) + 'px';
+        pip.style.right  = 'auto';
+        pip.style.bottom = 'auto';
+    }, {passive:true});
+    document.addEventListener('touchend', () => { dragging = false; });
+})();
+
+setInterval(()=>{
+    fetch('/get_stats').then(r=>r.json()).then(data=>{
+        // Sync hand state
+        if(handRaised&&!data.hand_raised){
+            handRaised=false;
+            const btn=document.getElementById('handBtn');
+            btn.innerText='✋ Raise My Hand';
+            btn.style.background='linear-gradient(135deg,#e65100,#ff9800)';
+            document.getElementById('handMsg').style.display='none';
+        }
+
+        // Teacher PiP
+        if(data.teacher_pip && !pipVisible) showPip();
+        else if(!data.teacher_pip && pipVisible) closePip();
+
+        // Poll
+        const ui=document.getElementById('poll_ui');
+        if(data.poll&&data.poll.active&&!data.poll.has_voted){
+            ui.style.display='block';
+            document.getElementById('poll_q').innerText=data.poll.question;
+            if(!document.getElementById('poll_opts').innerHTML){
+                let html='';
+                for(const opt of Object.keys(data.poll.options))
+                    html+=`<div class="poll-option" onclick="vote('${opt}')">${opt}</div>`;
+                document.getElementById('poll_opts').innerHTML=html;
+            }
+        }else{
+            ui.style.display='none';
+            document.getElementById('poll_opts').innerHTML='';
+        }
+    });
+},1000);
+</script>
+{% endblock %}
