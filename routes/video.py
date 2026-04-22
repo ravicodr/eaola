@@ -1,8 +1,14 @@
 import time
 import numpy as np
 import cv2
-from deepface import DeepFace
 from flask import Blueprint, Response, session, stream_with_context
+
+try:
+    from deepface import DeepFace
+    DEEPFACE_AVAILABLE = True
+except ImportError:
+    DEEPFACE_AVAILABLE = False
+    print("[WARNING] DeepFace not available — emotion detection disabled, defaulting to 'Thinking'")
 
 from camera import global_camera
 from models import active_student_sessions, camera_states, current_session, teacher_pip
@@ -51,12 +57,15 @@ def generate_feed(user_role, camera_active, username="unknown"):
                 frame_counter += 1
                 if frame_counter % 30 == 0:
                     try:
-                        small = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
-                        objs  = DeepFace.analyze(small, actions=['emotion'],
-                                                 enforce_detection=True, silent=True)
-                        if objs:
-                            raw   = objs[0]['dominant_emotion']
-                            label = EMOTION_MAP.get(raw, "Thinking")
+                        if DEEPFACE_AVAILABLE:
+                            small = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+                            objs  = DeepFace.analyze(small, actions=['emotion'],
+                                                     enforce_detection=True, silent=True)
+                            if objs:
+                                raw   = objs[0]['dominant_emotion']
+                                label = EMOTION_MAP.get(raw, "Thinking")
+                        else:
+                            label = "Thinking"
                     except Exception:
                         label = "Distracted"
 
